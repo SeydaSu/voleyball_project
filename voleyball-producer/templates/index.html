@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Voleybol Skor Takip</title>
+  <style>
+    :root {
+      --sand: #f0e4c8;
+      --sky-top: #2a5c8a;
+      --sky-bottom: #4b9fd6;
+      --net: rgba(255,255,255,0.25);
+      --team-a: #e8622c;
+      --team-b: #1f6feb;
+      --ink: #1a1f27;
+      --card-bg: rgba(255,255,255,0.92);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 45%, var(--sand) 45%, var(--sand) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      color: var(--ink);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 44.5%;
+      left: 0; right: 0;
+      height: 34px;
+      background-image:
+        repeating-linear-gradient(90deg, var(--net) 0 2px, transparent 2px 14px),
+        repeating-linear-gradient(0deg, var(--net) 0 2px, transparent 2px 14px);
+      border-top: 3px solid white;
+      border-bottom: 3px solid white;
+      opacity: 0.5;
+    }
+
+    h1 {
+      color: white;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      margin: 0 0 4px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      z-index: 1;
+    }
+    .top-icon { font-size: 1.4rem; margin-right: 6px; }
+
+    .set-bilgisi {
+      z-index: 1;
+      background: rgba(255,255,255,0.18);
+      color: white;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 28px;
+      backdrop-filter: blur(4px);
+    }
+
+    .skor-panel {
+      z-index: 1;
+      display: flex;
+      gap: 16px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      margin-bottom: 28px;
+    }
+
+    .takim-kart {
+      width: 150px;
+      text-align: center;
+      padding: 18px 10px;
+      border-radius: 14px;
+      transition: transform 0.15s ease;
+    }
+    .takim-kart.a { background: rgba(232,98,44,0.08); }
+    .takim-kart.b { background: rgba(31,111,235,0.08); }
+
+    .takim-ad {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .takim-kart.a .takim-ad { color: var(--team-a); }
+    .takim-kart.b .takim-ad { color: var(--team-b); }
+
+    .buyuk-skor {
+      font-size: 3.4rem;
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .buyuk-skor.pulse { animation: pulse 0.35s ease; }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    .set-noktalari {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .set-noktalari span {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: rgba(0,0,0,0.15);
+    }
+    .takim-kart.a .set-noktalari span.dolu { background: var(--team-a); }
+    .takim-kart.b .set-noktalari span.dolu { background: var(--team-b); }
+
+    .ayrac { width: 1px; background: rgba(0,0,0,0.08); }
+
+    .butonlar { display: flex; gap: 18px; z-index: 1; }
+    button {
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 16px 30px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    button:active { transform: translateY(2px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+    .btn-a { background: var(--team-a); }
+    .btn-b { background: var(--team-b); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    #durum-mesaji {
+      z-index: 1;
+      margin-top: 22px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: white;
+      background: rgba(0,0,0,0.25);
+      padding: 8px 20px;
+      border-radius: 999px;
+      min-height: 20px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    #durum-mesaji.gorunur { opacity: 1; }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .overlay.gorunur { display: flex; }
+    .overlay-kutu {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .kupa { font-size: 3.5rem; margin-bottom: 10px; }
+    .kazanan-yazi { font-size: 1.4rem; font-weight: 800; color: var(--ink); margin-bottom: 22px; }
+    .btn-yeni-mac {
+      background: #2a5c8a;
+      font-size: 1rem;
+      padding: 14px 28px;
+    }
+  </style>
+</head>
+<body>
+  <h1><span class="top-icon">🏐</span>Voleybol Skor Takip</h1>
+  <div class="set-bilgisi" id="setler">
+    Set {{ durum.set_no }} · Kazanılan Setler A {{ durum.kazanilan_setler_a }} - {{ durum.kazanilan_setler_b }} B
+  </div>
+
+  <div class="skor-panel">
+    <div class="takim-kart a">
+      <div class="takim-ad">Takım A</div>
+      <div class="buyuk-skor" id="skor-a">{{ durum.skor_a }}</div>
+      <div class="set-noktalari" id="setler-a">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="ayrac"></div>
+    <div class="takim-kart b">
+      <div class="takim-ad">Takım B</div>
+      <div class="buyuk-skor" id="skor-b">{{ durum.skor_b }}</div>
+      <div class="set-noktalari" id="setler-b">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="butonlar">
+    <button class="btn-a" onclick="skorArtir('a')">🏐 Takım A +1</button>
+    <button class="btn-b" onclick="skorArtir('b')">🏐 Takım B +1</button>
+  </div>
+
+  <div id="durum-mesaji"></div>
+
+  <div id="mac-sonu-overlay" class="overlay">
+    <div class="overlay-kutu">
+      <div class="kupa">🏆</div>
+      <div class="kazanan-yazi" id="kazanan-yazi"></div>
+      <button class="btn-yeni-mac" onclick="location.reload()">Yeni Maç Başlat</button>
+    </div>
+  </div>
+
+  <script>
+    function setNoktalariGuncelle(elId, kazanilanSet) {
+      const noktalar = document.querySelectorAll(`#${elId} span`);
+      noktalar.forEach((n, i) => n.classList.toggle("dolu", i < kazanilanSet));
+    }
+
+    function mesajGoster(metin) {
+      const el = document.getElementById("durum-mesaji");
+      el.innerText = metin;
+      el.classList.add("gorunur");
+    }
+
+    function mesajGizle() {
+      document.getElementById("durum-mesaji").classList.remove("gorunur");
+    }
+
+    function kazananGoster(kazananTakim) {
+      document.getElementById("kazanan-yazi").innerText = `Maç bitti! Kazanan: Takım ${kazananTakim}`;
+      document.getElementById("mac-sonu-overlay").classList.add("gorunur");
+      document.querySelectorAll(".butonlar button").forEach(b => b.disabled = true);
+    }
+
+    async function skorArtir(takim) {
+      const res = await fetch(`/skor-artir/${takim}`, { method: "POST" });
+      const data = await res.json();
+
+      if (data.hata) {
+        mesajGoster(data.hata);
+        return;
+      }
+
+      const skorAEl = document.getElementById("skor-a");
+      const skorBEl = document.getElementById("skor-b");
+      skorAEl.innerText = data.skorA;
+      skorBEl.innerText = data.skorB;
+
+      const guncellenen = takim === "a" ? skorAEl : skorBEl;
+      guncellenen.classList.remove("pulse");
+      void guncellenen.offsetWidth; // animasyonu yeniden tetiklemek için
+      guncellenen.classList.add("pulse");
+
+      document.getElementById("setler").innerText =
+        `Set ${data.setNo} · Kazanılan Setler A ${data.kazanilanSetlerA} - ${data.kazanilanSetlerB} B`;
+
+      setNoktalariGuncelle("setler-a", data.kazanilanSetlerA);
+      setNoktalariGuncelle("setler-b", data.kazanilanSetlerB);
+
+      // mesaj her seferinde önce gizlenir, sadece koşul sağlanırsa yeniden gösterilir
+      mesajGizle();
+
+      if (data.skorA === 0 && data.skorB === 0 && data.yeniSetBasladiMi) {
+        mesajGoster("🏐 Yeni set başladı!");
+      }
+
+      if (data.bitti) {
+        kazananGoster(data.kazananTakim);
+      }
+    }
+  </script>
+</body>
+</html>
